@@ -19,6 +19,7 @@ public class ClientThread extends Thread {
     private final String password;
     private final int port;
     private final String query;
+    private final Jedis jedis;
     private final String key;
     private final Histogram histogram;
     private final Histogram graphInternalHistogram;
@@ -32,6 +33,10 @@ public class ClientThread extends Thread {
         this.password = password;
         this.query = query;
         this.key = key;
+        this.jedis = new Jedis(hostname,port);
+        if (this.password != null){
+            this.jedis.auth(password);
+        }
         this.histogram = histogram;
         this.graphInternalHistogram = graphInternalHistogram;
         this.rateLimiter = null;
@@ -45,16 +50,16 @@ public class ClientThread extends Thread {
         this.password = password;
         this.query = query;
         this.key = key;
+        this.jedis = new Jedis(hostname,port);
+        if (this.password != null){
+            this.jedis.auth(password);
+        }
         this.histogram = histogram;
         this.graphInternalHistogram = graphInternalHistogram;
         this.rateLimiter = perClientRateLimiter;
     }
 
     public void run() {
-        Jedis jedis = new Jedis(hostname,port);
-        if (this.password != null){
-            jedis.auth(password);
-        }
         for (int i = 0; i < requests; i++) {
             if (rateLimiter!=null){
                 // blocks the executing thread until a permit is available.
