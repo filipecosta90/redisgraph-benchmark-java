@@ -1,12 +1,14 @@
 package com.redislabs;
 
 import com.redislabs.redisgraph.RedisGraph;
+//import org.HdrHistogram.*;
 
 public class ClientThread extends Thread {
     private final int requests;
     private final RedisGraph rg;
     private final String query;
     private final String key;
+//    private final Histogram
 
     ClientThread( RedisGraph rg, Integer requests, String key, String query ) {
         super("my extending thread");

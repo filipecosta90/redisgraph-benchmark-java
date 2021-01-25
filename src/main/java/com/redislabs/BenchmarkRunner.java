@@ -5,6 +5,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import com.redislabs.redisgraph.impl.api.RedisGraph;
 import redis.clients.jedis.JedisPool;
+import org.hdrhistogram.*;
 
 import java.util.ArrayList;
 
@@ -56,9 +57,10 @@ public class BenchmarkRunner implements Runnable {
         JedisPool pool = new JedisPool(new GenericObjectPoolConfig(), hostname,
                 port, 2000, password);
         RedisGraph rg = new RedisGraph(pool);
+        Histogram histogram = new Histogram(3600000000000L, 3);
         ArrayList<ClientThread> threadsArray = new ArrayList<ClientThread>();
         for (int i = 0; i < clients; i++) {
-            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query);
+            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, Histogram);
             clientThread.start();
             threadsArray.add(clientThread);
 
