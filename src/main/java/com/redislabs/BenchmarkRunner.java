@@ -65,6 +65,7 @@ public class BenchmarkRunner implements Runnable {
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(connections);
         poolConfig.setMaxIdle(connections);
+        poolConfig.setMinIdle(connections);
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
         List<Jedis> list = new ArrayList<>(connections);
@@ -74,7 +75,7 @@ public class BenchmarkRunner implements Runnable {
         for(Jedis j : list){
             j.ping();
             j.close();
-        }
+        :}
     RedisGraph rg = new RedisGraph(pool);
         ConcurrentHistogram histogram = new ConcurrentHistogram(900000000L, 3);
         ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
