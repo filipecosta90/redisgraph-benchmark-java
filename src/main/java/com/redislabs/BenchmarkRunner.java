@@ -35,7 +35,7 @@ public class BenchmarkRunner implements Runnable {
 
 
     @Option(names = { "--connections"},
-            description = "Number of total connections on the shared pool.", defaultValue = "8")
+            description = "Number of total connections per client.", defaultValue = "8")
     private  Integer connections;
 
     @Option(names = {"-p", "--port"},
@@ -60,12 +60,7 @@ public class BenchmarkRunner implements Runnable {
     public void run() {
         int requestsPerClient = numberRequests / clients;
         int rpsPerClient = rps / clients;
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(connections);
-        poolConfig.setMaxIdle(connections);
-        JedisPool pool = new JedisPool(poolConfig, hostname,
-                port, 2000, password);
-        RedisGraph rg = new RedisGraph(pool);
+
         ConcurrentHistogram histogram = new ConcurrentHistogram(900000000L, 3);
         ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
 
@@ -77,6 +72,12 @@ public class BenchmarkRunner implements Runnable {
         long previousTime = startTime;
         for (int i = 0; i < clients; i++) {
             ClientThread clientThread;
+            GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+            poolConfig.setMaxTotal(connections);
+            poolConfig.setMaxIdle(connections);
+            JedisPool pool = new JedisPool(poolConfig, hostname,
+                    port, 2000, password);
+            RedisGraph rg = new RedisGraph(pool);
             if (rps>0){
                 RateLimiter rateLimiter = RateLimiter.create(rpsPerClient);
                 clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
