@@ -41,6 +41,12 @@ public class ClientThread extends Thread {
     }
 
     public void run() {
+        RedisGraphContext ctx = rg.getContext();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         for (int i = 0; i < requests; i++) {
             if (rateLimiter!=null){
                 // blocks the executing thread until a permit is available.
@@ -48,9 +54,7 @@ public class ClientThread extends Thread {
             }
             ResultSet resultSet;
             long startTime = System.nanoTime();
-            try ( RedisGraphContext ctx = rg.getContext() ){
-                resultSet = ctx.query(key, query);
-            }
+            resultSet = ctx.query(key, query);
             long durationMicros = (System.nanoTime() - startTime) / 1000;
             String splitted = resultSet.getStatistics().getStringValue(Statistics.Label.QUERY_INTERNAL_EXECUTION_TIME).split(" ")[0];
             double internalDuration = Double.parseDouble(splitted) * 1000;
