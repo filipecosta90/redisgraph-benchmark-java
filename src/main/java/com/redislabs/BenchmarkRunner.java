@@ -69,7 +69,10 @@ public class BenchmarkRunner implements Runnable {
 
         ArrayList<ClientThread> threadsArray = new ArrayList<ClientThread>();
         System.out.println("Starting benchmark with "+ clients +" threads. Requests per thread " + requestsPerClient);
+        int aliveClients = 0;
+        long previousRequestCount = 0;
         long startTime = System.currentTimeMillis();
+        long previousTime = startTime;
         for (int i = 0; i < clients; i++) {
             ClientThread clientThread;
             if (rps>0){
@@ -80,19 +83,41 @@ public class BenchmarkRunner implements Runnable {
             }
             clientThread.start();
             threadsArray.add(clientThread);
+            aliveClients++;
         }
-        for (ClientThread ct: threadsArray
-             ) {
+        while (aliveClients>0){
+            long currentTotalCount = histogram.getTotalCount();
+            long currentTime = System.currentTimeMillis();
+            double currentp50onClient = histogram.getValueAtPercentile(50.0) / 1000.0f;
+            double currentp50internalTime = graphInternalTime.getValueAtPercentile(50.0) / 1000.0f;
+            double elapsedSecs = (currentTime - startTime) * 1000.0f;
+            double elapsedSincePreviousSecs = (currentTime - previousTime) / 1000.0f;
+            long countSincePreviousSecs = currentTotalCount - previousRequestCount;
+
+            double currentRps = countSincePreviousSecs /  elapsedSincePreviousSecs;
+            System.out.format( "Current RPS: %.3f commands/sec; Total requests %d ; Client p50 with RTT(ms): %.3f; Graph Internal Time p50 (ms) %.3f\n",currentRps,currentTotalCount,currentp50onClient,currentp50internalTime);
+            previousRequestCount = currentTotalCount;
+            previousTime = currentTime;
+            for (ClientThread ct: threadsArray
+            ) {
+                if (ct.isAlive() == false ){
+                    aliveClients--;
+                }
+            }
             try {
-                ct.join();
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        double totalDuration = (System.currentTimeMillis() - startTime) / 1000.f;
+
+        double totalDurationSecs = (System.currentTimeMillis() - startTime) / 1000.f;
+        long totalCommands = histogram.getTotalCount();
+        double overallRps = totalCommands/totalDurationSecs;
         System.out.println("################# RUNTIME STATS #################");
-        System.out.println("Total Duration "+ totalDuration +" Seconds");
-        System.out.println("Total Commands issued " + histogram.getTotalCount());
+        System.out.println("Total Duration "+ totalDurationSecs +" Seconds");
+        System.out.println("Total Commands issued " + totalCommands);
+        System.out.format( "Overall RPS: %.3f commands/sec;\n",overallRps);
         System.out.println("Overall Client Latency summary (msec):");
         System.out.println("p50 (ms):" + histogram.getValueAtPercentile(50.0)/1000.0f);
         System.out.println("p95 (ms):" + histogram.getValueAtPercentile(95.0)/1000.0f);
