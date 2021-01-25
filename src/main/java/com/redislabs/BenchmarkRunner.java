@@ -60,12 +60,7 @@ public class BenchmarkRunner implements Runnable {
     public void run() {
         int requestsPerClient = numberRequests / clients;
         int rpsPerClient = rps / clients;
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(connections);
-        poolConfig.setMaxIdle(connections);
-        JedisPool pool = new JedisPool(poolConfig, hostname,
-                port, 2000, password);
-        RedisGraph rg = new RedisGraph(pool);
+
         ConcurrentHistogram histogram = new ConcurrentHistogram(900000000L, 3);
         ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
 
@@ -79,9 +74,9 @@ public class BenchmarkRunner implements Runnable {
             ClientThread clientThread;
             if (rps>0){
                 RateLimiter rateLimiter = RateLimiter.create(rpsPerClient);
-                clientThread = new ClientThread(pool, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
+                clientThread = new ClientThread( hostname, port, password, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
             } else {
-                clientThread = new ClientThread(pool, requestsPerClient,key, query, histogram,graphInternalTime);
+                clientThread = new ClientThread(hostname, port, password, requestsPerClient,key, query, histogram,graphInternalTime);
             }
             clientThread.start();
             threadsArray.add(clientThread);

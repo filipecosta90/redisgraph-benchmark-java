@@ -15,17 +15,21 @@ import java.util.List;
 
 public class ClientThread extends Thread {
     private final int requests;
-    private final JedisPool rg;
+    private final String hostname;
+    private final String password;
+    private final int port;
     private final String query;
     private final String key;
     private final Histogram histogram;
     private final Histogram graphInternalHistogram;
     private final RateLimiter rateLimiter;
 
-    ClientThread(JedisPool pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram) {
+    ClientThread(String hostname, Integer port, String password, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram) {
         super("Client thread");
         this.requests = requests;
-        this.rg = pool;
+        this.hostname = hostname;
+        this.port = port;
+        this.password = password;
         this.query = query;
         this.key = key;
         this.histogram = histogram;
@@ -33,10 +37,12 @@ public class ClientThread extends Thread {
         this.rateLimiter = null;
     }
 
-    ClientThread(JedisPool pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram, RateLimiter perClientRateLimiter) {
+    ClientThread(String hostname, Integer port, String password,  Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram, RateLimiter perClientRateLimiter) {
         super("Client thread");
         this.requests = requests;
-        this.rg = pool;
+        this.hostname = hostname;
+        this.port = port;
+        this.password = password;
         this.query = query;
         this.key = key;
         this.histogram = histogram;
@@ -45,7 +51,10 @@ public class ClientThread extends Thread {
     }
 
     public void run() {
-        Jedis jedis = this.rg.getResource();
+        Jedis jedis = new Jedis(hostname,port);
+        if (this.password != null){
+            jedis.auth(password);
+        }
         for (int i = 0; i < requests; i++) {
             if (rateLimiter!=null){
                 // blocks the executing thread until a permit is available.
