@@ -51,7 +51,7 @@ public class ClientThread extends Thread {
             try ( RedisGraphContext ctx = rg.getContext() ){
                 resultSet = ctx.query(key, query);
             }
-                long durationMicros = (System.nanoTime() - startTime) / 1000;
+            long durationMicros = (System.nanoTime() - startTime) / 1000;
             String splitted = resultSet.getStatistics().getStringValue(Statistics.Label.QUERY_INTERNAL_EXECUTION_TIME).split(" ")[0];
             double internalDuration = Double.parseDouble(splitted) * 1000;
             graphInternalHistogram.recordValue((long) internalDuration);
