@@ -8,6 +8,7 @@ import com.redislabs.redisgraph.impl.api.RedisGraphCommand;
 import com.sun.org.apache.xalan.internal.lib.ExsltStrings;
 import org.HdrHistogram.*;
 import com.google.common.util.concurrent.RateLimiter;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.util.List;
@@ -50,7 +51,9 @@ public class ClientThread extends Thread {
                 rateLimiter.acquire(1);
             }
             long startTime = System.nanoTime();
-            List<Object> rawResponse = (List<Object>) rg.getResource().sendCommand(RedisGraphCommand.QUERY,key, query,"--compact");
+            try ( Jedis jedis = rg.getResource() ){
+                List<Object> rawResponse = (List<Object>)jedis.sendCommand(RedisGraphCommand.QUERY,key, query,"--compact");
+            }
             long durationMicros = (System.nanoTime() - startTime) / 1000;
 //            String splitted = resultSet.getStatistics().getStringValue(Statistics.Label.QUERY_INTERNAL_EXECUTION_TIME).split(" ")[0];
 //            double internalDuration = Double.parseDouble(splitted) * 1000;
