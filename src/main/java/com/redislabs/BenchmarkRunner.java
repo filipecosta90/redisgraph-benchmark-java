@@ -62,6 +62,7 @@ public class BenchmarkRunner implements Runnable {
         int rpsPerClient = rps / clients;
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(connections);
+        poolConfig.setMaxIdle(connections);
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
         RedisGraph rg = new RedisGraph(pool);
