@@ -1,5 +1,6 @@
 package com.redislabs;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -41,6 +42,10 @@ public class BenchmarkRunner implements Runnable {
             description = "Number of clients.", defaultValue = "6379")
     private  Integer port;
 
+    @Option(names = {"--rps"},
+            description = "Max rps. If 0 no limit is applied and the DB is stressed up to maximum.", defaultValue = "0")
+    private  Integer rps;
+
     @Option(names = {"-n", "--number-requests"},
             description = "Number of requests.", defaultValue = "1000000")
     private  Integer numberRequests;
@@ -54,6 +59,7 @@ public class BenchmarkRunner implements Runnable {
 
     public void run() {
         int requestsPerClient = numberRequests / clients;
+        int rpsPerClient = rps / clients;
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
@@ -62,8 +68,11 @@ public class BenchmarkRunner implements Runnable {
         ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
 
         ArrayList<ClientThread> threadsArray = new ArrayList<ClientThread>();
+        System.out.println("Starting benchmark with "+ clients +" threads. Requests per thread " + requestsPerClient);
+        long startTime = System.currentTimeMillis();
         for (int i = 0; i < clients; i++) {
-            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime);
+            RateLimiter rateLimiter = RateLimiter.create(rpsPerClient);
+            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
             clientThread.start();
             threadsArray.add(clientThread);
         }
@@ -75,7 +84,10 @@ public class BenchmarkRunner implements Runnable {
                 e.printStackTrace();
             }
         }
-        System.out.println("Overall Runtime stats");
+        double totalDuration = (System.currentTimeMillis() - startTime) / 1000.f;
+        System.out.println("################# RUNTIME STATS #################");
+        System.out.println("Total Duration "+ totalDuration +" Seconds");
+        System.out.println("Total Commands issued " + histogram.getTotalCount());
         System.out.println("Overall Client Latency summary (msec):");
         System.out.println("p50 (ms):" + histogram.getValueAtPercentile(50.0)/1000.0f);
         System.out.println("p95 (ms):" + histogram.getValueAtPercentile(95.0)/1000.0f);
