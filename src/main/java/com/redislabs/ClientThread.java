@@ -22,10 +22,10 @@ public class ClientThread extends Thread {
     private final Histogram graphInternalHistogram;
     private final RateLimiter rateLimiter;
 
-    ClientThread(Jedis pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram) {
+    ClientThread(JedisPool pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram) {
         super("Client thread");
         this.requests = requests;
-        this.rg = pool;
+        this.rg = pool.getResource();
         this.query = query;
         this.key = key;
         this.histogram = histogram;
@@ -33,10 +33,10 @@ public class ClientThread extends Thread {
         this.rateLimiter = null;
     }
 
-    ClientThread(Jedis pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram, RateLimiter perClientRateLimiter) {
+    ClientThread(JedisPool pool, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram, RateLimiter perClientRateLimiter) {
         super("Client thread");
         this.requests = requests;
-        this.rg = pool;
+        this.rg = pool.getResource();
         this.query = query;
         this.key = key;
         this.histogram = histogram;
