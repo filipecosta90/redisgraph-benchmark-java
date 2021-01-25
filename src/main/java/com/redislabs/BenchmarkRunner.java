@@ -71,8 +71,13 @@ public class BenchmarkRunner implements Runnable {
         System.out.println("Starting benchmark with "+ clients +" threads. Requests per thread " + requestsPerClient);
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < clients; i++) {
-            RateLimiter rateLimiter = RateLimiter.create(rpsPerClient);
-            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
+            ClientThread clientThread;
+            if (rps>0){
+                RateLimiter rateLimiter = RateLimiter.create(rpsPerClient);
+                clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime, rateLimiter);
+            } else {
+                clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime);
+            }
             clientThread.start();
             threadsArray.add(clientThread);
         }

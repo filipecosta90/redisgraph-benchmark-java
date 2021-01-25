@@ -17,6 +17,17 @@ public class ClientThread extends Thread {
     private final Histogram graphInternalHistogram;
     private final RateLimiter rateLimiter;
 
+    ClientThread(RedisGraph rg, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram) {
+        super("Client thread");
+        this.requests = requests;
+        this.rg = rg;
+        this.query = query;
+        this.key = key;
+        this.histogram = histogram;
+        this.graphInternalHistogram = graphInternalHistogram;
+        this.rateLimiter = null;
+    }
+
     ClientThread(RedisGraph rg, Integer requests, String key, String query, ConcurrentHistogram histogram, ConcurrentHistogram graphInternalHistogram, RateLimiter perClientRateLimiter) {
         super("Client thread");
         this.requests = requests;
@@ -26,13 +37,14 @@ public class ClientThread extends Thread {
         this.histogram = histogram;
         this.graphInternalHistogram = graphInternalHistogram;
         this.rateLimiter = perClientRateLimiter;
-//        System.out.println("Client thread created" + this);
     }
 
     public void run() {
         for (int i = 0; i < requests; i++) {
-            // blocks the executing thread until a permit is available.
-            rateLimiter.acquire(1);
+            if (rateLimiter!=null){
+                // blocks the executing thread until a permit is available.
+                rateLimiter.acquire(1);
+            }
             long startTime = System.nanoTime();
             ResultSet resultSet = rg.query(key, query);
             long durationMicros = (System.nanoTime() - startTime) / 1000;
