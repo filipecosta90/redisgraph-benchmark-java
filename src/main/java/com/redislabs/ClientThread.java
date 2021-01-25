@@ -48,13 +48,8 @@ public class ClientThread extends Thread {
             }
             ResultSet resultSet;
             long startTime = System.nanoTime();
-
             try ( RedisGraphContext ctx = rg.getContext() ){
-
-
-
             resultSet = ctx.query(key, query);
-//            ctx.close();
             }
                 long durationMicros = (System.nanoTime() - startTime) / 1000;
             String splitted = resultSet.getStatistics().getStringValue(Statistics.Label.QUERY_INTERNAL_EXECUTION_TIME).split(" ")[0];
