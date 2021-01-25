@@ -5,7 +5,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import com.redislabs.redisgraph.impl.api.RedisGraph;
 import redis.clients.jedis.JedisPool;
-import org.hdrhistogram.*;
+import org.HdrHistogram.*;
 
 import java.util.ArrayList;
 
@@ -54,17 +54,18 @@ public class BenchmarkRunner implements Runnable {
 
     public void run() {
         int requestsPerClient = numberRequests / clients;
-        JedisPool pool = new JedisPool(new GenericObjectPoolConfig(), hostname,
+        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
         RedisGraph rg = new RedisGraph(pool);
-        Histogram histogram = new Histogram(3600000000000L, 3);
+        ConcurrentHistogram histogram = new ConcurrentHistogram(900000000L, 3);
+        ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
+
         ArrayList<ClientThread> threadsArray = new ArrayList<ClientThread>();
         for (int i = 0; i < clients; i++) {
-            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, Histogram);
+            ClientThread clientThread = new ClientThread(rg, requestsPerClient,key, query, histogram,graphInternalTime);
             clientThread.start();
             threadsArray.add(clientThread);
-
-
         }
         for (ClientThread ct: threadsArray
              ) {
@@ -74,7 +75,14 @@ public class BenchmarkRunner implements Runnable {
                 e.printStackTrace();
             }
         }
-        System.out.println("Main thread's run is over");
-
+        System.out.println("Overall Runtime stats");
+        System.out.println("Overall Client Latency summary (msec):");
+        System.out.println("p50 (ms):" + histogram.getValueAtPercentile(50.0)/1000.0f);
+        System.out.println("p95 (ms):" + histogram.getValueAtPercentile(95.0)/1000.0f);
+        System.out.println("p99 (ms):" + histogram.getValueAtPercentile(99.0)/1000.0f);
+        System.out.println("Overall Internal execution time (msec):");
+        System.out.println("p50 (ms):" + graphInternalTime.getValueAtPercentile(50.0)/1000.0f);
+        System.out.println("p95 (ms):" + graphInternalTime.getValueAtPercentile(95.0)/1000.0f);
+        System.out.println("p99 (ms):" + graphInternalTime.getValueAtPercentile(99.0)/1000.0f);
     }
 }
