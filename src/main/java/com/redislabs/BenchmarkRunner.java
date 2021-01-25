@@ -5,10 +5,12 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 import com.redislabs.redisgraph.impl.api.RedisGraph;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import org.HdrHistogram.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @CommandLine.Command(name = "redisgraph-benchmark-java", mixinStandardHelpOptions = true, version = "RedisGraph benchmark Java 0.0.1")
 public class BenchmarkRunner implements Runnable {
@@ -65,7 +67,15 @@ public class BenchmarkRunner implements Runnable {
         poolConfig.setMaxIdle(connections);
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
-        RedisGraph rg = new RedisGraph(pool);
+        List<Jedis> list = new ArrayList<>(connections);
+        for(int i=0 ; i<connections ;++i) {
+            list.add( pool.getResource());
+        }
+        for(Jedis j : list){
+            j.ping();
+            j.close();
+        }
+    RedisGraph rg = new RedisGraph(pool);
         ConcurrentHistogram histogram = new ConcurrentHistogram(900000000L, 3);
         ConcurrentHistogram graphInternalTime = new ConcurrentHistogram(900000000L, 3);
 
