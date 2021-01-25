@@ -53,7 +53,7 @@ public class ClientThread extends Thread {
             long startTime = System.nanoTime();
 //            Jedis jedis = rg.getResource();
             List<Object> rawResponse = (List<Object>) this.rg.sendCommand(RedisGraphCommand.QUERY,key, query,"--compact");
-            rg.close();
+//            rg.close();
             long durationMicros = (System.nanoTime() - startTime) / 1000;
 //            String splitted = resultSet.getStatistics().getStringValue(Statistics.Label.QUERY_INTERNAL_EXECUTION_TIME).split(" ")[0];
 //            double internalDuration = Double.parseDouble(splitted) * 1000;
