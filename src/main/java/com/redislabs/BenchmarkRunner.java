@@ -35,7 +35,7 @@ public class BenchmarkRunner implements Runnable {
 
 
     @Option(names = { "--connections"},
-            description = "Number of connections per clients.", defaultValue = "8")
+            description = "Number of total connections on the shared pool.", defaultValue = "8")
     private  Integer connections;
 
     @Option(names = {"-p", "--port"},
@@ -61,6 +61,7 @@ public class BenchmarkRunner implements Runnable {
         int requestsPerClient = numberRequests / clients;
         int rpsPerClient = rps / clients;
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        poolConfig.setMaxTotal(connections);
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
         RedisGraph rg = new RedisGraph(pool);
