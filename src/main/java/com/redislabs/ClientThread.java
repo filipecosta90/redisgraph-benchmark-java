@@ -4,9 +4,7 @@ import com.google.common.util.concurrent.RateLimiter;
 import com.redislabs.redisgraph.RedisGraph;
 import com.redislabs.redisgraph.ResultSet;
 import com.redislabs.redisgraph.Statistics;
-import com.sun.org.apache.xalan.internal.lib.ExsltStrings;
 import org.HdrHistogram.*;
-import com.google.common.util.concurrent.RateLimiter;
 
 public class ClientThread extends Thread {
     private final int requests;

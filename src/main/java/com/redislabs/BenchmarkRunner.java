@@ -63,6 +63,7 @@ public class BenchmarkRunner implements Runnable {
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
         poolConfig.setMaxTotal(connections);
         poolConfig.setMaxIdle(connections);
+        poolConfig.setMinIdle(connections);
         JedisPool pool = new JedisPool(poolConfig, hostname,
                 port, 2000, password);
         RedisGraph rg = new RedisGraph(pool);
