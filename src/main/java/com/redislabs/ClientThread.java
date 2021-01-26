@@ -38,6 +38,11 @@ public class ClientThread extends Thread {
     }
 
     public void run() {
+        try {
+            Thread.sleep((long) (1000+(Math.random()*1000)));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         for (int i = 0; i < requests; i++) {
             if (rateLimiter!=null){
                 // blocks the executing thread until a permit is available.
